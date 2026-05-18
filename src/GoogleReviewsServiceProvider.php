@@ -64,6 +64,9 @@ class GoogleReviewsServiceProvider extends ServiceProvider
             \Livewire\Livewire::component('google-reviews-widget', \Nicxonsolutions\GoogleReviews\Livewire\GoogleReviewsWidget::class);
         }
 
-        View::share('googleReviewsAssetUrl', route('google-reviews.assets.css'));
+        View::share(
+            'googleReviewsAssetUrl',
+            asset('vendor/nicxon-google-reviews/nicxon-google-reviews.css')
+        );
     }
 }

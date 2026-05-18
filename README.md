@@ -1,165 +1,480 @@
 # Nicxon Google Reviews for Laravel
 
-Laravel package for showing a Google Reviews widget. The default driver uses **Google Business Profile OAuth**, so website owners do not need a Places API key, a Place ID, or Google Maps Platform billing/credit-card setup.
+Production-ready Laravel package for displaying Google Reviews using multiple drivers, including **Google Business Profile OAuth** as the default integration method.
 
-The package also keeps two future paths open:
+Unlike traditional Google Places integrations, the default driver does **not** require:
 
-- `places` for the official Places API key + Place ID method.
-- `nicxon_connector` for a future Nicxon-hosted connector if we decide to provide the easiest possible setup.
+- Google Maps Platform billing
+- A Google Maps API key
+- A Google Place ID
+- Credit card setup
 
-## Requirements
+The package is designed for:
+
+- Laravel Blade
+- Livewire
+- Vue
+- React
+- Alpine.js
+- Web Components
+- Headless/API usage
+
+---
+
+# Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Drivers](#drivers)
+  - [Business Profile Driver](#business-profile-driver-default)
+  - [Places API Driver](#places-api-driver)
+  - [Nicxon Connector Driver](#nicxon-connector-driver-future)
+- [Blade Usage](#blade-usage)
+- [Livewire Usage](#livewire-usage)
+- [JSON API Endpoint](#json-api-endpoint)
+- [Vue Integration](#vue-integration)
+- [React Integration](#react-integration)
+- [Web Component Integration](#web-component-integration)
+- [Styling](#styling)
+- [Caching](#caching)
+- [Error Handling](#error-handling)
+- [Security Notes](#security-notes)
+- [Production Recommendations](#production-recommendations)
+- [Publishing Assets](#publishing-assets)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
+---
+
+# Features
+
+- Google Business Profile OAuth integration
+- No Google Maps billing required by default
+- Automatic caching and stale fallback support
+- Blade component support
+- Livewire component support
+- Vue starter component
+- React starter component
+- Web Component support
+- JSON API endpoint
+- Scoped CSS styling
+- Graceful error handling
+- Multi-location support
+- Laravel 10, 11, 12, and 13 compatibility
+
+---
+
+# Requirements
 
 - PHP 8.2+
 - Laravel 10+
-- A Google account that owns or manages the Google Business Profile location
-- OAuth credentials/token access for Google Business Profile APIs
+- A Google account with access to a Google Business Profile
+- OAuth credentials for Google Business Profile APIs
 
-No `GOOGLE_MAPS_API_KEY` is required for the default `business_profile` driver.
+Official Google documentation:
 
-Official docs:
+- https://developers.google.com/my-business/content/review-data
+- https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/list
 
-- [Google Business Profile review data](https://developers.google.com/my-business/content/review-data)
-- [accounts.locations.reviews.list](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/list)
+---
 
-## Install
+# Installation
+
+Install the package:
 
 ```bash
 composer require nicxonsolutions/google-reviews
+```
+
+Publish configuration:
+
+```bash
 php artisan vendor:publish --tag=google-reviews-config
 ```
 
-For a full localhost/path-repository install and Business Profile OAuth walkthrough, see [docs/MANUAL_INSTALL_BUSINESS_PROFILE.md](docs/MANUAL_INSTALL_BUSINESS_PROFILE.md).
+Optional asset publishing:
 
-## Default Driver: Business Profile
+```bash
+php artisan vendor:publish --tag=google-reviews-assets
+```
+
+For local/path repository installation and OAuth walkthroughs, see:
+
+```text
+docs/MANUAL_INSTALL_BUSINESS_PROFILE.md
+```
+
+---
+
+# Configuration
+
+Add the following variables to your `.env` file.
+
+---
+
+# Drivers
+
+## Business Profile Driver (Default)
+
+Recommended for most websites.
 
 ```dotenv
 GOOGLE_REVIEWS_DRIVER=business_profile
-GOOGLE_BUSINESS_PROFILE_CLIENT_ID=your-oauth-client-id
-GOOGLE_BUSINESS_PROFILE_CLIENT_SECRET=your-oauth-client-secret
-GOOGLE_BUSINESS_PROFILE_REFRESH_TOKEN=google-refresh-token
+
+GOOGLE_BUSINESS_PROFILE_CLIENT_ID=
+GOOGLE_BUSINESS_PROFILE_CLIENT_SECRET=
+GOOGLE_BUSINESS_PROFILE_REFRESH_TOKEN=
+
 GOOGLE_BUSINESS_PROFILE_LOCATION=
+
 GOOGLE_REVIEWS_CACHE_TTL=1800
 GOOGLE_REVIEWS_STALE_TTL=86400
+
 GOOGLE_REVIEWS_SHOW_ERRORS=false
 ```
 
-`GOOGLE_BUSINESS_PROFILE_LOCATION` is optional. If it is empty, the package uses the first accessible location from the connected Google Business Profile account.
+### Notes
 
-For multi-location accounts, set it to:
+`GOOGLE_BUSINESS_PROFILE_LOCATION` is optional.
+
+If omitted, the package automatically uses the first accessible Business Profile location.
+
+For multi-location accounts:
 
 ```dotenv
 GOOGLE_BUSINESS_PROFILE_LOCATION=accounts/123456789/locations/987654321
 ```
 
-That is a Google Business Profile location name, not a Google Maps Place ID.
+This value is a Google Business Profile location identifier, not a Google Maps Place ID.
 
-## Blade
+---
+
+## Places API Driver
+
+Optional official Google Places API integration.
+
+```dotenv
+GOOGLE_REVIEWS_DRIVER=places
+
+GOOGLE_MAPS_API_KEY=
+GOOGLE_REVIEWS_PLACE_ID=
+```
+
+### Important
+
+This driver requires:
+
+- Google Cloud Platform
+- Places API enabled
+- Billing enabled on the Google Cloud account
+
+---
+
+## Nicxon Connector Driver (Future)
+
+Reserved for future hosted integrations.
+
+```dotenv
+GOOGLE_REVIEWS_DRIVER=nicxon_connector
+
+NICXON_GOOGLE_REVIEWS_CONNECTOR_ENDPOINT=https://reviews.nicxonsolutions.com
+NICXON_GOOGLE_REVIEWS_SITE_TOKEN=
+```
+
+Currently this driver returns a friendly setup message until the hosted service becomes available.
+
+---
+
+# Blade Usage
+
+Render the default widget:
 
 ```blade
 <x-google-reviews-widget />
 ```
 
-With a specific Business Profile location:
+Specify a Business Profile location:
 
 ```blade
-<x-google-reviews-widget location="accounts/123456789/locations/987654321" />
+<x-google-reviews-widget
+    location="accounts/123456789/locations/987654321"
+/>
 ```
 
-## Livewire
+---
 
-If `livewire/livewire` is installed, the package registers:
+# Livewire Usage
+
+If `livewire/livewire` is installed, the package automatically registers:
 
 ```blade
 <livewire:google-reviews-widget />
 ```
 
-## JSON Endpoint
+---
 
-The package exposes a resilient endpoint for Vue, React, Alpine, or any other frontend:
+# JSON API Endpoint
+
+The package exposes a resilient frontend endpoint.
+
+Endpoints:
 
 ```text
 /nicxon-google-reviews/data
 /nicxon-google-reviews/data?source=accounts/123456789/locations/987654321
 ```
 
-The endpoint always returns JSON and does not throw Google API errors into the page:
+Example response:
 
 ```json
 {
-  "ok": false,
-  "message": "Connect a Google Business Profile account to show Google Reviews.",
-  "status": null,
-  "place": [],
-  "reviews": []
+    "ok": true,
+    "message": null,
+    "status": 200,
+    "place": {
+        "name": "Business Name",
+        "rating": 4.9
+    },
+    "reviews": []
 }
 ```
 
-## Vue and React Starters
+Failure response example:
 
-Publish starter components when you want to copy them into your app build:
+```json
+{
+    "ok": false,
+    "message": "Connect a Google Business Profile account to show Google Reviews.",
+    "status": null,
+    "place": [],
+    "reviews": []
+}
+```
+
+The endpoint never exposes raw Google API exceptions directly to frontend users.
+
+---
+
+# Vue Integration
+
+Publish assets:
 
 ```bash
 php artisan vendor:publish --tag=google-reviews-assets
 ```
 
-Published files:
+Published Vue component:
 
-- `resources/js/vendor/nicxon-google-reviews/vue/GoogleReviewsWidget.vue`
-- `resources/js/vendor/nicxon-google-reviews/react/GoogleReviewsWidget.jsx`
-- `resources/js/vendor/nicxon-google-reviews/web-component/nicxon-google-reviews.js`
+```text
+resources/js/vendor/nicxon-google-reviews/vue/GoogleReviewsWidget.vue
+```
 
-## Custom Element
+Usage example:
 
-After importing the web component in your app bundle:
+```vue
+<GoogleReviewsWidget />
+```
+
+---
+
+# React Integration
+
+Published React component:
+
+```text
+resources/js/vendor/nicxon-google-reviews/react/GoogleReviewsWidget.jsx
+```
+
+Usage example:
+
+```jsx
+<GoogleReviewsWidget />
+```
+
+---
+
+# Web Component Integration
+
+Published web component:
+
+```text
+resources/js/vendor/nicxon-google-reviews/web-component/nicxon-google-reviews.js
+```
+
+Usage:
 
 ```html
 <nicxon-google-reviews></nicxon-google-reviews>
 ```
 
-With a specific Business Profile location:
+With a specific location:
 
 ```html
-<nicxon-google-reviews location="accounts/123456789/locations/987654321"></nicxon-google-reviews>
+<nicxon-google-reviews
+    location="accounts/123456789/locations/987654321">
+</nicxon-google-reviews>
 ```
 
-## Optional Driver: Places API
+---
 
-This remains available, but it is no longer the default because Google Maps Platform billing is required.
+# Styling
 
-```dotenv
-GOOGLE_REVIEWS_DRIVER=places
-GOOGLE_MAPS_API_KEY=your-google-cloud-api-key
-GOOGLE_REVIEWS_PLACE_ID=your-place-id
-```
-
-Use this only when the site owner is comfortable enabling `Places API (New)` and Google billing.
-
-## Future Driver: Nicxon Connector
-
-The package includes a placeholder `nicxon_connector` driver so we can later add a hosted Nicxon service without changing the widget API:
-
-```dotenv
-GOOGLE_REVIEWS_DRIVER=nicxon_connector
-NICXON_GOOGLE_REVIEWS_CONNECTOR_ENDPOINT=https://reviews.nicxonsolutions.com
-NICXON_GOOGLE_REVIEWS_SITE_TOKEN=site-token
-```
-
-This driver currently returns a friendly setup error until a real hosted connector exists.
-
-## Styling
-
-The Blade and Livewire widgets load:
+The package automatically serves scoped widget CSS:
 
 ```text
 /nicxon-google-reviews/assets/widget.css
 ```
 
-This is a package-owned scoped CSS file, so the host website does not need Tailwind configured. The source Tailwind entry is included at `resources/css/widget.css`; the distributed CSS is scoped under `.nxgr` to avoid leaking styles into the user's website.
+### Benefits
 
-## Error Handling
+- No Tailwind dependency required on host applications
+- Styles are scoped under `.nxgr`
+- Prevents style leakage into the host website
 
-The package handles missing OAuth tokens, missing locations, unauthorized Google accounts, request timeouts, quota limits, and Google outages. Successful responses are cached briefly, and the most recent successful response can be used as a stale fallback when Google is temporarily unavailable. By default, production pages fail quietly. Set this when you want visible diagnostics:
+Source CSS entry:
+
+```text
+resources/css/widget.css
+```
+
+---
+
+# Caching
+
+The package caches successful review responses automatically.
+
+Environment variables:
+
+```dotenv
+GOOGLE_REVIEWS_CACHE_TTL=1800
+GOOGLE_REVIEWS_STALE_TTL=86400
+```
+
+### Cache Strategy
+
+- Fresh cache reduces Google API requests
+- Stale fallback improves uptime during outages
+- Improves performance and page speed
+
+---
+
+# Error Handling
+
+The package gracefully handles:
+
+- Missing OAuth credentials
+- Invalid refresh tokens
+- Unauthorized Google accounts
+- Missing Business Profile locations
+- Google API outages
+- Timeouts
+- Rate limits
+- Empty review responses
+
+By default, production pages fail quietly.
+
+Enable visible diagnostics during development:
 
 ```dotenv
 GOOGLE_REVIEWS_SHOW_ERRORS=true
 ```
+
+---
+
+# Security Notes
+
+Never commit sensitive credentials into source control.
+
+Recommended:
+
+- Store OAuth credentials in `.env`
+- Rotate refresh tokens periodically
+- Restrict Google OAuth applications properly
+- Use HTTPS in production environments
+
+---
+
+# Production Recommendations
+
+Recommended production setup:
+
+- Enable Laravel cache
+- Use Redis or Memcached
+- Cache reviews aggressively
+- Serve widgets via CDN if needed
+- Enable stale fallback support
+- Queue review refreshes for high-traffic websites
+
+Recommended cache drivers:
+
+```dotenv
+CACHE_STORE=redis
+```
+
+---
+
+# Publishing Assets
+
+Publish package assets:
+
+```bash
+php artisan vendor:publish --tag=google-reviews-assets
+```
+
+Publish configuration:
+
+```bash
+php artisan vendor:publish --tag=google-reviews-config
+```
+
+---
+
+# Troubleshooting
+
+## Route Not Defined
+
+If you encounter:
+
+```text
+Route [google-reviews.assets.css] not defined
+```
+
+Ensure package routes are loaded before route generation.
+
+Run:
+
+```bash
+php artisan optimize:clear
+composer dump-autoload
+```
+
+---
+
+## Widget Not Showing Reviews
+
+Verify:
+
+- OAuth credentials are valid
+- Refresh token is active
+- Business Profile access exists
+- Location identifier is correct
+
+---
+
+## Livewire Component Missing
+
+Install Livewire:
+
+```bash
+composer require livewire/livewire
+```
+
+---
+
+# License
+
+Licensed under GPL-2.0-or-later.
+
+Copyright © PT. Nicxon International Solutions
