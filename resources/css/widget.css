@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .nxgr-widget {
+        @apply mx-auto w-full max-w-xs bg-white text-slate-900;
+    }
+}
